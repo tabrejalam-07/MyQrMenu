@@ -266,7 +266,7 @@
                 <div class="menu-subtitle">Menu Card</div>
             </div>
             <div class="search-wrapper">
-                <input type="text" placeholder="Search items" class="search-box">
+            <input type="text" placeholder="Search items" class="search-box">
                 <i class="fas fa-search search-icon"></i>
             </div>
             <div class="sort-controls">
@@ -323,7 +323,7 @@
 
                 // Function to render menu items
                 function renderMenuItems(items) {
-                    menuItemsContainer.innerHTML = '';
+                menuItemsContainer.innerHTML = '';
 
                     if (items.length === 0) {
                         const noItemsDiv = document.createElement('div');
@@ -339,17 +339,17 @@
                     }
 
                     items.forEach((item, index) => {
-                        const div = document.createElement('div');
-                        div.className = 'menu-item';
-                        div.style.animationDelay = `${index * 0.1}s`;
-                        div.innerHTML = `
-                            <div class="item-info">
-                                <div class="item-icon">🍽️</div>
+                    const div = document.createElement('div');
+                    div.className = 'menu-item';
+                    div.style.animationDelay = `${index * 0.1}s`;
+                    div.innerHTML = `
+                        <div class="item-info">
+                            <div class="item-icon">🍽️</div>
                                 <div class="item-name">${item.name}</div>
-                            </div>
+                        </div>
                             <div class="item-price">₹${item.price}</div>
-                        `;
-                        menuItemsContainer.appendChild(div);
+                    `;
+                    menuItemsContainer.appendChild(div);
                     });
                 }
 
