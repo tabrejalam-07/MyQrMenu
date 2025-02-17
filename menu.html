@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Menu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .menu-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+            transform: translateY(30px);
+            opacity: 0;
+            animation: slideUp 0.8s ease forwards;
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes slideUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .restaurant-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-20px);
+            animation: slideDown 0.8s ease forwards 0.3s;
+            opacity: 0;
+        }
+
+        @keyframes slideDown {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .restaurant-name {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .menu-title {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            font-weight: 400;
+        }
+
+        .menu-items {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transform: translateX(-20px);
+            opacity: 0;
+            animation: slideIn 0.5s ease forwards;
+            transition: all 0.3s ease;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes slideIn {
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .item-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .item-name {
+            color: #333;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .item-price {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            padding: 8px 20px;
+            border-radius: 25px;
+            box-shadow: 0 2px 10px rgba(42, 82, 152, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .menu-item:hover .item-price {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(42, 82, 152, 0.3);
+        }
+
+        .menu-footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards 1s;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .menu-container {
+                padding: 1.5rem;
+            }
+
+            .restaurant-name {
+                font-size: 2rem;
+            }
+
+            .item-name {
+                font-size: 1.1rem;
+            }
+
+            .item-price {
+                font-size: 1.1rem;
+                padding: 6px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-container">
+        <div class="restaurant-header">
+            <h1 class="restaurant-name" id="restaurantName"></h1>
+            <div class="menu-title">Digital Menu Card</div>
+        </div>
+        <div class="menu-items" id="menuItems"></div>
+        <div class="menu-footer">
+            Scan & Order • Digital Menu
+        </div>
+    </div>
+
+    <script>
+        // Food item icons mapping
+        const foodIcons = {
+            default: '🍽️',
+            pizza: '🍕',
+            burger: '🍔',
+            drink: '🥤',
+            dessert: '🍰',
+            salad: '🥗',
+            soup: '🥣',
+            noodles: '🍜',
+            rice: '🍚',
+            bread: '🍞',
+            sandwich: '🥪'
+        };
+
+        // Get food icon based on item name
+        function getFoodIcon(itemName) {
+            const nameLower = itemName.toLowerCase();
+            for (const [key, icon] of Object.entries(foodIcons)) {
+                if (nameLower.includes(key)) {
+                    return icon;
+                }
+            }
+            return foodIcons.default;
+        }
+
+        function displayMenu(menuData) {
+            // Set restaurant name
+            document.getElementById('restaurantName').textContent = menuData.restaurantName;
+
+            // Display menu items
+            const menuItemsContainer = document.getElementById('menuItems');
+            menuItemsContainer.innerHTML = '';
+            
+            menuData.items.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'menu-item';
+                div.style.animationDelay = `${index * 0.1}s`;
+                div.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-icon">${getFoodIcon(item.name)}</div>
+                        <span class="item-name">${item.name}</span>
+                    </div>
+                    <span class="item-price">₹${item.price}</span>
+                `;
+                menuItemsContainer.appendChild(div);
+            });
+        }
+
+        // Load menu when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const menuData = JSON.parse(decodeURIComponent(window.location.hash.slice(1)));
+                displayMenu(menuData);
+            } catch (error) {
+                console.error('Error loading menu:', error);
+            }
+        });
+    </script>
+</body>
+</html> 

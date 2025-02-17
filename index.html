@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyQrMenu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="fabicon.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">My QR Menu</h1>
+        
+        <div class="input-section">
+            <div class="restaurant-info">
+                <input type="text" id="restaurantName" placeholder="Enter Restaurant Name" class="input-field">
+            </div>
+
+            <div class="menu-items" id="menuItems">
+                <div class="menu-item">
+                    <div class="item-details">
+                        <input type="text" placeholder="Food Item Name" class="input-field item-name">
+                        <input type="number" placeholder="Price" class="input-field item-price">
+                    </div>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button id="addItem" class="btn add-btn">
+                     Add Item
+                </button>
+                <button id="removeItem" class="btn remove-btn">
+                     Remove
+                </button>
+            </div>
+
+            <button id="generateQR" class="btn generate-btn">
+                <i class="fas fa-qrcode"></i> Generate QR Code
+            </button>
+        </div>
+
+        <div class="qr-section" id="qrSection" style="display: none;">
+            <div id="qrcode"></div>
+            <button id="downloadQR" class="btn download-btn">
+                <i class="fas fa-download"></i> Download QR Code
+            </button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
