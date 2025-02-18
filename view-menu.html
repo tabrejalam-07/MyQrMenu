@@ -7,17 +7,12 @@
     <title>Food Menu</title>
     <link rel="icon" type="image/png" href="fabicon.webp">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet"><!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Food Menu</title>
-    <link rel="icon" type="image/png" href="fabicon.webp">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <!-- Add these Firebase SDK imports before your existing scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
     <style>
         * {
@@ -312,13 +307,13 @@
                 // Get restaurant ID from URL path
                 const pathSegments = window.location.pathname.split('/');
                 const restaurantId = pathSegments[pathSegments.indexOf('menu') + 1];
-                console.log('Restaurant ID:', restaurantId);
+                console.log('Fetching menu for restaurant:', restaurantId);
 
                 if (!restaurantId) {
                     throw new Error('Restaurant ID not found in URL');
                 }
 
-                // Fetch restaurant data directly from Firestore
+                // Fetch restaurant data
                 const restaurantDoc = await db.collection('restaurants').doc(restaurantId).get();
                 
                 if (!restaurantDoc.exists) {
@@ -326,6 +321,7 @@
                 }
 
                 const restaurantData = restaurantDoc.data();
+                console.log('Restaurant data:', restaurantData);
                 
                 // Fetch menu items
                 const menuSnapshot = await db.collection('menu_items')
@@ -341,44 +337,26 @@
                     });
                 });
 
+                console.log('Menu items:', menuItems);
+
                 const menuData = {
                     restaurantName: restaurantData.name,
                     items: menuItems
                 };
 
-                console.log('Menu Data:', menuData);
-
                 // Set restaurant name
                 const restaurantNameElement = document.getElementById('restaurantName');
-                restaurantNameElement.textContent = menuData.restaurantName;
+                if (restaurantNameElement) {
+                    restaurantNameElement.textContent = menuData.restaurantName;
+                }
 
                 // Display menu items
                 const menuItemsContainer = document.getElementById('menuItems');
                 let currentItems = menuData.items;
-                let currentSort = { field: null, ascending: true };
 
-                // Function to sort items
-                function sortItems(items, sortField) {
-                    if (sortField === currentSort.field) {
-                        currentSort.ascending = !currentSort.ascending;
-                    } else {
-                        currentSort.field = sortField;
-                        currentSort.ascending = true;
-                    }
-
-                    return [...items].sort((a, b) => {
-                        let comparison = 0;
-                        if (sortField === 'name') {
-                            comparison = a.name.localeCompare(b.name);
-                        } else if (sortField === 'price') {
-                            comparison = a.price - b.price;
-                        }
-                        return currentSort.ascending ? comparison : -comparison;
-                    });
-                }
-
-                // Function to render menu items
                 function renderMenuItems(items) {
+                    if (!menuItemsContainer) return;
+                    
                     menuItemsContainer.innerHTML = '';
 
                     if (items.length === 0) {
@@ -399,18 +377,18 @@
                         div.className = 'menu-item';
                         div.style.animationDelay = `${index * 0.1}s`;
                         div.innerHTML = `
-                        <div class="item-info">
-                            <div class="item-icon">🍽️</div>
-                            <div class="item-name">${item.name}</div>
-                        </div>
+                            <div class="item-info">
+                                <div class="item-icon">🍽️</div>
+                                <div class="item-name">${item.name}</div>
+                            </div>
                             <div class="item-price">₹${item.price}</div>
-                    `;
+                        `;
                         menuItemsContainer.appendChild(div);
                     });
                 }
 
                 // Initial render
-                renderMenuItems(menuData.items);
+                renderMenuItems(currentItems);
 
                 // Add search functionality
                 const searchBox = document.querySelector('.search-box');
@@ -508,9 +486,6 @@
                         }
 
                         currentItems = exactMatches;
-                        if (currentSort.field) {
-                            currentItems = sortItems(currentItems, currentSort.field);
-                        }
                         renderMenuItems(currentItems);
                         searchBox.blur();
                     }, 1000);
@@ -534,7 +509,15 @@
                         button.classList.add('active');
 
                         const sortField = button.dataset.sort;
-                        currentItems = sortItems(currentItems, sortField);
+                        currentItems = [...currentItems].sort((a, b) => {
+                            let comparison = 0;
+                            if (sortField === 'name') {
+                                comparison = a.name.localeCompare(b.name);
+                            } else if (sortField === 'price') {
+                                comparison = a.price - b.price;
+                            }
+                            return comparison;
+                        });
                         renderMenuItems(currentItems);
                     });
                 });
