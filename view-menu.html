@@ -7,7 +7,560 @@
     <title>Food Menu</title>
     <link rel="icon" type="image/png" href="fabicon.webp">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"><!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Menu</title>
+    <link rel="icon" type="image/png" href="fabicon.webp">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 10px;
+        }
+
+        .search-wrapper {
+            position: relative;
+            margin: 15px;
+        }
+
+        .search-box {
+            width: 100%;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem 3rem 1.5rem 1.5rem;
+            border-radius: 20px;
+            border: 1px solid #2a5298;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            font-size: 1rem;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 1rem;
+            top: 43%;
+            transform: translateY(-50%);
+            color: #1e3c72;
+            font-size: 1.2rem;
+            pointer-events: none;
+        }
+
+        .menu-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1rem;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .restaurant-header {
+            text-align: center;
+            margin-bottom: 20px;
+
+            padding: 20px;
+            padding-top: 20px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+
+        .restaurant-name {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .menu-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 15px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .item-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+        }
+
+        .item-name {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #333;
+            flex: 1;
+        }
+
+        .item-price {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e3c72;
+            background: rgba(30, 60, 114, 0.1);
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin-left: auto;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .menu-footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .sort-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+
+        .sort-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 15px;
+            background: rgba(30, 60, 114, 0.1);
+            color: #1e3c72;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .sort-btn:hover {
+            background: rgba(30, 60, 114, 0.2);
+        }
+
+        .sort-btn.active {
+            background: #1e3c72;
+            color: white;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .menu-container {
+                padding: 1rem;
+                margin: 0.5rem 0rem;
+
+            }
+
+            .restaurant-name {
+                font-size: 1.8rem;
+            }
+
+            .search-box {
+                width: 100%;
+                height: 40px;
+                background: rgba(255, 255, 255, 0.95);
+                padding: 1.5rem 3rem 1.5rem 1.5rem;
+                border-radius: 20px;
+                border: 1px solid #2a5298;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                max-width: 600px;
+                margin-bottom: 0.77rem;
+            }
+
+            .menu-item {
+                padding: 12px;
+                margin: 0.73rem 0px;
+            }
+
+            .item-info {
+                gap: 8px;
+            }
+
+            .item-name {
+                font-size: 1rem;
+            }
+
+            .item-price {
+                font-size: 1rem;
+                padding: 4px 12px;
+                min-width: 70px;
+            }
+
+            .search-icon {
+                right: 1.2rem;
+                font-size: 1.1rem;
+            }
+        }
+
+        .no-items-message {
+            text-align: center;
+            padding: 2rem;
+            color: #1e3c72;
+            font-size: 1.1rem;
+            background: rgba(30, 60, 114, 0.1);
+            border-radius: 12px;
+            margin: 1rem 15px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHfctsAeDQOMkH9eNBU3JdXuOUZ4hMK64",
+            authDomain: "myqrmenu-7a009.firebaseapp.com",
+            projectId: "myqrmenu-7a009",
+            storageBucket: "myqrmenu-7a009.firebasestorage.app",
+            messagingSenderId: "526725653767",
+            appId: "1:526725653767:web:43793513d1f0ece3c951a2"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
+
+</head>
+
+<body>
+    <main>
+        <div class="menu-container">
+            <div class="restaurant-header">
+                <h1 class="restaurant-name" id="restaurantName"></h1>
+                <div class="menu-subtitle">Menu Card</div>
+            </div>
+            <div class="search-wrapper">
+                <input type="text" placeholder="Search items" class="search-box">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+            <div class="sort-controls">
+                <button class="sort-btn" data-sort="name">Sort by Name</button>
+                <button class="sort-btn" data-sort="price">Sort by Price</button>
+            </div>
+            <div id="menuItems"></div>
+            <div class="menu-footer">
+                Thank you for visiting!
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Get restaurant ID from URL path
+                const pathSegments = window.location.pathname.split('/');
+                const restaurantId = pathSegments[pathSegments.indexOf('menu') + 1];
+                console.log('Restaurant ID:', restaurantId);
+
+                if (!restaurantId) {
+                    throw new Error('Restaurant ID not found in URL');
+                }
+
+                // Fetch restaurant data directly from Firestore
+                const restaurantDoc = await db.collection('restaurants').doc(restaurantId).get();
+                
+                if (!restaurantDoc.exists) {
+                    throw new Error('Restaurant not found');
+                }
+
+                const restaurantData = restaurantDoc.data();
+                
+                // Fetch menu items
+                const menuSnapshot = await db.collection('menu_items')
+                    .where('restaurantId', '==', restaurantId)
+                    .get();
+
+                const menuItems = [];
+                menuSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    menuItems.push({
+                        name: data.name,
+                        price: parseFloat(data.price).toFixed(2)
+                    });
+                });
+
+                const menuData = {
+                    restaurantName: restaurantData.name,
+                    items: menuItems
+                };
+
+                console.log('Menu Data:', menuData);
+
+                // Set restaurant name
+                const restaurantNameElement = document.getElementById('restaurantName');
+                restaurantNameElement.textContent = menuData.restaurantName;
+
+                // Display menu items
+                const menuItemsContainer = document.getElementById('menuItems');
+                let currentItems = menuData.items;
+                let currentSort = { field: null, ascending: true };
+
+                // Function to sort items
+                function sortItems(items, sortField) {
+                    if (sortField === currentSort.field) {
+                        currentSort.ascending = !currentSort.ascending;
+                    } else {
+                        currentSort.field = sortField;
+                        currentSort.ascending = true;
+                    }
+
+                    return [...items].sort((a, b) => {
+                        let comparison = 0;
+                        if (sortField === 'name') {
+                            comparison = a.name.localeCompare(b.name);
+                        } else if (sortField === 'price') {
+                            comparison = a.price - b.price;
+                        }
+                        return currentSort.ascending ? comparison : -comparison;
+                    });
+                }
+
+                // Function to render menu items
+                function renderMenuItems(items) {
+                    menuItemsContainer.innerHTML = '';
+
+                    if (items.length === 0) {
+                        const noItemsDiv = document.createElement('div');
+                        noItemsDiv.className = 'no-items-message';
+                        noItemsDiv.innerHTML = `
+                            <div>😕 No items found</div>
+                            <div style="font-size: 0.9rem; margin-top: 0.5rem;">
+                                Menu is empty
+                            </div>
+                        `;
+                        menuItemsContainer.appendChild(noItemsDiv);
+                        return;
+                    }
+
+                    items.forEach((item, index) => {
+                        const div = document.createElement('div');
+                        div.className = 'menu-item';
+                        div.style.animationDelay = `${index * 0.1}s`;
+                        div.innerHTML = `
+                        <div class="item-info">
+                            <div class="item-icon">🍽️</div>
+                            <div class="item-name">${item.name}</div>
+                        </div>
+                            <div class="item-price">₹${item.price}</div>
+                    `;
+                        menuItemsContainer.appendChild(div);
+                    });
+                }
+
+                // Initial render
+                renderMenuItems(menuData.items);
+
+                // Add search functionality
+                const searchBox = document.querySelector('.search-box');
+                let searchTimeout;
+
+                // Function to calculate string similarity (Levenshtein distance)
+                function getLevenshteinDistance(str1, str2) {
+                    const track = Array(str2.length + 1).fill(null).map(() =>
+                        Array(str1.length + 1).fill(null));
+
+                    for (let i = 0; i <= str1.length; i++) track[0][i] = i;
+                    for (let j = 0; j <= str2.length; j++) track[j][0] = j;
+
+                    for (let j = 1; j <= str2.length; j++) {
+                        for (let i = 1; i <= str1.length; i++) {
+                            const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+                            track[j][i] = Math.min(
+                                track[j][i - 1] + 1,
+                                track[j - 1][i] + 1,
+                                track[j - 1][i - 1] + indicator
+                            );
+                        }
+                    }
+                    return track[str2.length][str1.length];
+                }
+
+                // Function to find similar items
+                function findSimilarItems(searchTerm) {
+                    if (!searchTerm) return [];
+
+                    const similarItems = menuData.items
+                        .map(item => {
+                            const words = item.name.toLowerCase().split(' ');
+                            const searchWords = searchTerm.toLowerCase().split(' ');
+
+                            let minDistance = Infinity;
+                            searchWords.forEach(searchWord => {
+                                words.forEach(word => {
+                                    const distance = getLevenshteinDistance(word, searchWord);
+                                    if (distance < minDistance) minDistance = distance;
+                                });
+                            });
+
+                            return { ...item, distance: minDistance };
+                        })
+                        .filter(item => item.distance <= 2) // Only show items with small differences
+                        .sort((a, b) => a.distance - b.distance);
+
+                    return similarItems;
+                }
+
+                searchBox.addEventListener('input', (e) => {
+                    clearTimeout(searchTimeout);
+
+                    searchTimeout = setTimeout(() => {
+                        const searchTerm = e.target.value.toLowerCase();
+                        const exactMatches = menuData.items.filter(item =>
+                            item.name.toLowerCase().includes(searchTerm)
+                        );
+
+                        if (exactMatches.length === 0 && searchTerm.length > 2) {
+                            // If no exact matches, find similar items
+                            const similarItems = findSimilarItems(searchTerm);
+                            if (similarItems.length > 0) {
+                                const noItemsDiv = document.createElement('div');
+                                noItemsDiv.className = 'no-items-message';
+                                noItemsDiv.innerHTML = `
+                                    <div>😕 item not Available</div>
+                                    <div style="font-size: 0.9rem; margin-top: 0.5rem;">
+                                        🥰 Try these items:
+                                        ${similarItems.slice(0, 3).map(item => `
+                                            <div class="suggestion" style="margin-top: 0.5rem; color: #1e3c72; cursor: pointer;">
+                                                ${item.name}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                `;
+                                menuItemsContainer.innerHTML = '';
+                                menuItemsContainer.appendChild(noItemsDiv);
+
+                                // Add click handlers for suggestions
+                                const suggestions = noItemsDiv.querySelectorAll('.suggestion');
+                                suggestions.forEach(suggestion => {
+                                    suggestion.addEventListener('click', () => {
+                                        searchBox.value = suggestion.textContent.trim();
+                                        currentItems = menuData.items.filter(item =>
+                                            item.name === suggestion.textContent.trim()
+                                        );
+                                        renderMenuItems(currentItems);
+                                        searchBox.blur();
+                                    });
+                                });
+                                return;
+                            }
+                        }
+
+                        currentItems = exactMatches;
+                        if (currentSort.field) {
+                            currentItems = sortItems(currentItems, currentSort.field);
+                        }
+                        renderMenuItems(currentItems);
+                        searchBox.blur();
+                    }, 1000);
+                });
+
+                // Add event listener for the enter key
+                searchBox.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        searchBox.blur(); // Close keyboard when enter is pressed
+                        e.preventDefault(); // Prevent form submission if within a form
+                    }
+                });
+
+                // Add sort functionality
+                const sortButtons = document.querySelectorAll('.sort-btn');
+                sortButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        // Remove active class from all buttons
+                        sortButtons.forEach(btn => btn.classList.remove('active'));
+                        // Add active class to clicked button
+                        button.classList.add('active');
+
+                        const sortField = button.dataset.sort;
+                        currentItems = sortItems(currentItems, sortField);
+                        renderMenuItems(currentItems);
+                    });
+                });
+
+            } catch (error) {
+                console.error('Error loading menu:', error);
+                document.body.innerHTML = `
+                    <div class="menu-container">
+                        <div class="restaurant-header">
+                            <h1 class="restaurant-name">Error</h1>
+                            <div class="menu-subtitle">Could not load menu data</div>
+                            <div style="color: white; margin-top: 10px; font-size: 0.9rem;">
+                                ${error.message}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+    </script>
+
+</body>
+
+</html>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <style>
