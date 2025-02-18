@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
     <style>
         * {
@@ -191,7 +193,7 @@
             .menu-container {
                 padding: 1rem;
                 margin: 0.5rem 0rem;
-                
+
             }
 
             .restaurant-name {
@@ -250,11 +252,28 @@
             from {
                 opacity: 0;
             }
+
             to {
                 opacity: 1;
             }
         }
     </style>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHfctsAeDQOMkH9eNBU3JdXuOUZ4hMK64",
+            authDomain: "myqrmenu-7a009.firebaseapp.com",
+            projectId: "myqrmenu-7a009",
+            storageBucket: "myqrmenu-7a009.firebasestorage.app",
+            messagingSenderId: "526725653767",
+            appId: "1:526725653767:web:43793513d1f0ece3c951a2"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
 
 </head>
 
@@ -266,7 +285,7 @@
                 <div class="menu-subtitle">Menu Card</div>
             </div>
             <div class="search-wrapper">
-            <input type="text" placeholder="Search items" class="search-box">
+                <input type="text" placeholder="Search items" class="search-box">
                 <i class="fas fa-search search-icon"></i>
             </div>
             <div class="sort-controls">
@@ -284,23 +303,53 @@
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 // Get restaurant ID from URL path
-                const restaurantId = window.location.pathname.split('/').pop();
+                const pathSegments = window.location.pathname.split('/');
+                const restaurantId = pathSegments[pathSegments.indexOf('menu') + 1];
+                console.log('Restaurant ID:', restaurantId);
 
-                // Fetch menu data from API
-                const response = await fetch(`/api/menu/${restaurantId}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch menu data');
+                if (!restaurantId) {
+                    throw new Error('Restaurant ID not found in URL');
                 }
 
-                const menuData = await response.json();
+                // Fetch restaurant data directly from Firestore
+                const restaurantDoc = await db.collection('restaurants').doc(restaurantId).get();
+                
+                if (!restaurantDoc.exists) {
+                    throw new Error('Restaurant not found');
+                }
+
+                const restaurantData = restaurantDoc.data();
+                
+                // Fetch menu items
+                const menuSnapshot = await db.collection('menu_items')
+                    .where('restaurantId', '==', restaurantId)
+                    .get();
+
+                const menuItems = [];
+                menuSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    menuItems.push({
+                        name: data.name,
+                        price: parseFloat(data.price).toFixed(2)
+                    });
+                });
+
+                const menuData = {
+                    restaurantName: restaurantData.name,
+                    items: menuItems
+                };
+
+                console.log('Menu Data:', menuData);
 
                 // Set restaurant name
-                document.getElementById('restaurantName').textContent = menuData.restaurantName;
+                const restaurantNameElement = document.getElementById('restaurantName');
+                restaurantNameElement.textContent = menuData.restaurantName;
 
                 // Display menu items
                 const menuItemsContainer = document.getElementById('menuItems');
+                let currentItems = menuData.items;
                 let currentSort = { field: null, ascending: true };
-                
+
                 // Function to sort items
                 function sortItems(items, sortField) {
                     if (sortField === currentSort.field) {
@@ -323,7 +372,7 @@
 
                 // Function to render menu items
                 function renderMenuItems(items) {
-                menuItemsContainer.innerHTML = '';
+                    menuItemsContainer.innerHTML = '';
 
                     if (items.length === 0) {
                         const noItemsDiv = document.createElement('div');
@@ -331,7 +380,7 @@
                         noItemsDiv.innerHTML = `
                             <div>😕 No items found</div>
                             <div style="font-size: 0.9rem; margin-top: 0.5rem;">
-                                Try searching for something else
+                                Menu is empty
                             </div>
                         `;
                         menuItemsContainer.appendChild(noItemsDiv);
@@ -339,17 +388,17 @@
                     }
 
                     items.forEach((item, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'menu-item';
-                    div.style.animationDelay = `${index * 0.1}s`;
-                    div.innerHTML = `
+                        const div = document.createElement('div');
+                        div.className = 'menu-item';
+                        div.style.animationDelay = `${index * 0.1}s`;
+                        div.innerHTML = `
                         <div class="item-info">
                             <div class="item-icon">🍽️</div>
-                                <div class="item-name">${item.name}</div>
+                            <div class="item-name">${item.name}</div>
                         </div>
                             <div class="item-price">₹${item.price}</div>
                     `;
-                    menuItemsContainer.appendChild(div);
+                        menuItemsContainer.appendChild(div);
                     });
                 }
 
@@ -358,17 +407,16 @@
 
                 // Add search functionality
                 const searchBox = document.querySelector('.search-box');
-                let currentItems = menuData.items;
                 let searchTimeout;
 
                 // Function to calculate string similarity (Levenshtein distance)
                 function getLevenshteinDistance(str1, str2) {
                     const track = Array(str2.length + 1).fill(null).map(() =>
                         Array(str1.length + 1).fill(null));
-                    
+
                     for (let i = 0; i <= str1.length; i++) track[0][i] = i;
                     for (let j = 0; j <= str2.length; j++) track[j][0] = j;
-                    
+
                     for (let j = 1; j <= str2.length; j++) {
                         for (let i = 1; i <= str1.length; i++) {
                             const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
@@ -385,12 +433,12 @@
                 // Function to find similar items
                 function findSimilarItems(searchTerm) {
                     if (!searchTerm) return [];
-                    
+
                     const similarItems = menuData.items
                         .map(item => {
                             const words = item.name.toLowerCase().split(' ');
                             const searchWords = searchTerm.toLowerCase().split(' ');
-                            
+
                             let minDistance = Infinity;
                             searchWords.forEach(searchWord => {
                                 words.forEach(word => {
@@ -398,18 +446,18 @@
                                     if (distance < minDistance) minDistance = distance;
                                 });
                             });
-                            
+
                             return { ...item, distance: minDistance };
                         })
                         .filter(item => item.distance <= 2) // Only show items with small differences
                         .sort((a, b) => a.distance - b.distance);
-                    
+
                     return similarItems;
                 }
 
                 searchBox.addEventListener('input', (e) => {
                     clearTimeout(searchTimeout);
-                    
+
                     searchTimeout = setTimeout(() => {
                         const searchTerm = e.target.value.toLowerCase();
                         const exactMatches = menuData.items.filter(item =>
@@ -477,7 +525,7 @@
                         sortButtons.forEach(btn => btn.classList.remove('active'));
                         // Add active class to clicked button
                         button.classList.add('active');
-                        
+
                         const sortField = button.dataset.sort;
                         currentItems = sortItems(currentItems, sortField);
                         renderMenuItems(currentItems);
@@ -491,6 +539,9 @@
                         <div class="restaurant-header">
                             <h1 class="restaurant-name">Error</h1>
                             <div class="menu-subtitle">Could not load menu data</div>
+                            <div style="color: white; margin-top: 10px; font-size: 0.9rem;">
+                                ${error.message}
+                            </div>
                         </div>
                     </div>
                 `;

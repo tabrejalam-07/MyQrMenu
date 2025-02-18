@@ -28,8 +28,23 @@ function getLocalIP() {
 const localIP = getLocalIP();
 
 // Route for menu page
-app.get('/menu/:restaurantId', (req, res) => {
-    res.sendFile(path.join(__dirname, 'view-menu.html'));
+app.get('/menu/:restaurantId', async (req, res) => {
+    try {
+        const { restaurantId } = req.params;
+        
+        // Verify restaurant exists before serving the page
+        const restaurantRef = doc(db, 'restaurants', restaurantId);
+        const restaurantDoc = await getDoc(restaurantRef);
+        
+        if (!restaurantDoc.exists()) {
+            return res.status(404).send('Restaurant not found');
+        }
+        
+        res.sendFile(path.join(__dirname, 'view-menu.html'));
+    } catch (error) {
+        console.error('Error serving menu page:', error);
+        res.status(500).send('Error loading menu page');
+    }
 });
 
 // Route to get server IP
@@ -73,27 +88,32 @@ app.get('/api/menu/:restaurantId', async (req, res) => {
     
     try {
         // Get restaurant document
-        const restaurantDoc = await getDoc(doc(db, 'restaurants', restaurantId));
+        const restaurantRef = doc(db, 'restaurants', restaurantId);
+        const restaurantDoc = await getDoc(restaurantRef);
         
         if (!restaurantDoc.exists()) {
             return res.status(404).json({ error: 'Restaurant not found' });
         }
         
         // Get menu items
-        const menuSnapshot = await getDocs(
-            query(collection(db, 'menu_items'), 
-            where('restaurantId', '==', restaurantId))
-        );
+        const menuItemsRef = collection(db, 'menu_items');
+        const q = query(menuItemsRef, where('restaurantId', '==', restaurantId));
+        const menuSnapshot = await getDocs(q);
         
-        const items = menuSnapshot.docs.map(doc => ({
-            name: doc.data().name,
-            price: doc.data().price.toFixed(2)
-        }));
+        const items = [];
+        menuSnapshot.forEach((doc) => {
+            const data = doc.data();
+            items.push({
+                name: data.name,
+                price: parseFloat(data.price).toFixed(2)
+            });
+        });
         
         res.json({
             restaurantName: restaurantDoc.data().name,
             items: items
         });
+        
     } catch (error) {
         console.error('Error fetching menu:', error);
         res.status(500).json({ error: 'Failed to fetch menu' });
